@@ -1,0 +1,109 @@
+<languageVersion : 1.0;>
+
+kernel transitionFade
+<   namespace : "dLib";
+    vendor : "Damien Doussaud, namide.com";
+    version : 3;
+    description : "Crossfade between two images"; >
+{ 
+
+    input image4 picture1;
+    input image4 picture2;
+    output pixel4 dst;
+    
+    parameter float2 shaderSize
+	< 
+        minValue:float2( 0.0, 0.0 );
+		maxValue:float2( 4000.0, 4000.0 );
+		defaultValue:float2( 256.0, 256.0 );
+	>;
+    
+    parameter float2 picture1Position
+    < 
+        minValue:float2( -4000.0, -4000.0 );
+		maxValue:float2( 4000.0, 4000.0 );
+		defaultValue:float2( 0.0, 0.0 );
+	>;
+    
+    parameter float2 picture2Position
+    < 
+        minValue:float2( -4000.0, -4000.0 );
+		maxValue:float2( 4000.0, 4000.0 );
+		defaultValue:float2( 0.0, 0.0 );
+	>;
+    
+    parameter float2 picture1Scale
+    < 
+        minValue:float2( -100.0, -100.0 );
+		maxValue:float2( 100.0, 100.0 );
+		defaultValue:float2( 1.0, 1.0 );
+	>;
+    
+    parameter float2 picture2Scale
+    < 
+        minValue:float2( -100.0, -100.0 );
+		maxValue:float2( 100.0, 100.0 );
+		defaultValue:float2( 1.0, 1.0 );
+	>;
+    
+    parameter float percent
+    <
+        minValue: 0.0;
+        maxValue: 1.0;
+    >;
+
+   
+      
+    void
+    evaluatePixel()
+    {
+        float w = shaderSize.x * 0.25;
+        float h = shaderSize.y * 0.25;
+
+        const float2 beginPoint = float2( 0.0, 0.0 );
+    
+        float x = ( (beginPoint.x + outCoord().x) / w);
+        float y = ( (beginPoint.y + outCoord().y) / h);
+        
+        /*float mini1 = - ( ( cos( x ) + cos( y ) ) * 0.25 + 0.5 );
+        float mini2 = - ( ( cos( x ) + cos( y ) ) * 0.25 + 0.5 );
+        float mini3 = - ( ( cos( x ) + cos( y ) ) * 0.25 + 0.5 );*/
+        
+        float mini = - ( ( cos( x ) + cos( y ) ) * 0.25 + 0.5 );
+        float val = mini + (1.0 - percent) * 2.0;
+        if(val < 0.0) val = 0.0;
+        if(val > 1.0) val = 1.0;
+        
+        /*float val1 = mini1 + (1.0 - percent) * 2.0;
+        float val2 = mini2 + (1.0 - percent) * 2.0;
+        float val3 = mini3 + (1.0 - percent) * 2.0;
+        
+        if(val1 < 0.0) val1 = 0.0;
+        if(val1 > 1.0) val1 = 1.0;
+        
+        if(val2 < 0.0) val2 = 0.0;
+        if(val2 > 1.0) val2 = 1.0;
+        
+        if(val3 < 0.0) val3 = 0.0;
+        if(val3 > 1.0) val3 = 1.0;*/
+        
+        float2 pos = outCoord();
+        pos.x = ( (pos.x - picture1Position.x) / picture1Scale.x);
+        pos.y = ( (pos.y - picture1Position.y) / picture1Scale.y);
+        pixel4 i1 = sampleNearest( picture2, pos );
+        
+        pos = outCoord();
+        pos.x = ( (pos.x - picture2Position.x) / picture2Scale.x);
+        pos.y = ( (pos.y - picture2Position.y) / picture2Scale.y);
+        pixel4 i2 = sampleNearest( picture1, pos );
+        
+        dst = mix( i1, i2, val );
+        
+        /*float r = mix( i1.r , i2.r , val1);
+        float g = mix( i1.g , i2.g , val2);
+        float b = mix( i1.b , i2.b , val3);
+    
+        dst = pixel4( r, g, b, 1);*/
+        
+    }
+}

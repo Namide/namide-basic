@@ -1,0 +1,52 @@
+<languageVersion : 1.0;>
+
+kernel transitionFade
+<   namespace : "dLib";
+    vendor : "Damien Doussaud, namide.com";
+    version : 3;
+    description : "Crossfade between two images"; >
+{ 
+
+    input image4 picture1;
+    input image4 picture2;
+    output pixel4 dst;
+    
+    parameter float2 shaderSize
+	< 
+        minValue:float2( 0.0, 0.0 );
+		maxValue:float2( 4000.0, 4000.0 );
+		defaultValue:float2( 256.0, 256.0 );
+	>;
+    
+    parameter float percent
+    <
+        minValue: 0.0;
+        maxValue: 1.0;
+    >;
+
+   
+      
+    void
+    evaluatePixel()
+    {
+        dst = mix( sampleNearest( picture1, outCoord() ), sampleNearest( picture2, outCoord() ), percent );
+        /*float w = shaderSize.x * 0.25;
+        float h = shaderSize.y * 0.25;
+
+        const float2 beginPoint = float2( 0.0, 0.0 );
+    
+        float x = outCoord().x / w;
+        float y = outCoord().y / h;
+        
+        float mini = - ( ( cos( x ) + cos( y ) ) * 0.25 + 0.5 );
+        float val = mini + (1.0 - percent) * 2.0;
+        if(val < 0.0) val = 0.0;
+        if(val > 1.0) val = 1.0;
+        
+        pixel4 i1 = sampleNearest( picture2, outCoord() );
+        pixel4 i2 = sampleNearest( picture1, outCoord() );
+        
+        dst = mix( i1, i2, val );*/
+        
+    }
+}
