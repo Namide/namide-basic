@@ -16,10 +16,10 @@ package namide.basic.geom
 		private var _a:Vector2D;
 		private var _b:Vector2D;
 		
-		public function Segment2D(a:Vector2D, b:Vector2D) 
+		public function Segment2D( a:Vector2D = null, b:Vector2D = null ) 
 		{
-			_a = a;
-			_b = b;
+			_a = ( a == null ) ? new Vector2D() : a;
+			_b = ( b == null ) ? new Vector2D() : b;
 		}
 		
 		/**
@@ -43,7 +43,7 @@ package namide.basic.geom
 		
 		public function getEquation():Equation2D { return (new Equation2D()).setByPoints( _a, _b ); }
 		
-		public function getCrossOfOrthogonal(vect:Vector2D):Vector2D
+		public function getCrossOfOrthogonal(vect:Vector2DConst):Vector2D
 		{
 			var line:Equation2D = Equation2D.equationByOrthogonalEquationAndPoint( getEquation(), vect );
 			var cross:Vector2D = crossByEquation(line);
@@ -61,7 +61,7 @@ package namide.basic.geom
 		 * @param	vect	Point who cross the orthogonal equation
 		 * @return	orthogonal equation
 		 */
-		public function getOrtoghonalEquation(vect:Vector2D):Equation2D
+		public function getOrthogonalEquation(vect:Vector2D):Equation2D
 		{
 			return Equation2D.pointsToEquation( getCrossOfOrthogonal(vect), vect );
 		}
@@ -90,17 +90,47 @@ package namide.basic.geom
 		{
 			const l1:Equation2D = Equation2D.pointsToEquation( _a, _b );
 			const l2:Equation2D = Equation2D.pointsToEquation( segment._a, segment._b );
-			
 			var i:Vector2D = l1.cross(l2);
+			
+			//trace(".", l1, l2, i);
+			
+			var min:Number, max:Number;
 			
 			if (i != null)
 			{
-				if ( hitTestPoint(i) && segment.hitTestPoint(i) ) 
+				if ( _a.x < _b.x )
+				{
+					min = _a.x;
+					max = _b.x
+				}
+				else
+				{
+					min = _b.x;
+					max = _a.x
+				}
+				
+				if ( i.x < min || i.x > max ) return null;
+				
+				if ( _a.y < _b.y )
+				{
+					min = _a.y;
+					max = _b.y
+				}
+				else
+				{
+					min = _b.y;
+					max = _a.y
+				}
+				
+				if ( i.y < min || i.y > max ) return null;
+				
+				return i;
+
+				/*if ( hitTestPoint(i) && segment.hitTestPoint(i) ) 
 				{
 					return i;
-				}
+				}*/
 			}
-			
 			return null;
 		}
 		
@@ -154,6 +184,25 @@ package namide.basic.geom
 			return false;
 		}
 		
+		public function isOver( point:Vector2DConst ):Boolean
+		{
+			const vx:Number = point.x - _a.x;
+			const vy:Number = point.y - _a.y;
+			const sx:Number = _b.x - _a.x;
+			const sy:Number = _b.y - _a.y;
+			
+			return ( ( (vx * sy) - (vy * sx) ) > 0 );
+		}
+		
+		public function isOverOrOn( point:Vector2DConst ):Boolean
+		{
+			const vx:Number = point.x - _a.x;
+			const vy:Number = point.y - _a.y;
+			const sx:Number = _b.x - _a.x;
+			const sy:Number = _b.y - _a.y;
+			
+			return ( ( (vx * sy) - (vy * sx) ) >= 0 );
+		}
 		
 		public function toString():String
 		{

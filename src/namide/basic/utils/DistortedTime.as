@@ -90,6 +90,14 @@ package namide.basic.utils
 				_callbackLoopTime.splice( i, 1 );
 			}
 		}
+		public function clearAllCallbackLoop():void
+		{
+			var i:int;
+			while ( _callbackFct.length > 0 )
+			{
+				clearCallbackLoop( _callbackFct[0] );
+			}
+		}
 		
 		protected function testCallbackLoop():void
 		{

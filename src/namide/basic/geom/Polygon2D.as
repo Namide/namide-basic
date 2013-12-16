@@ -10,12 +10,16 @@ package namide.basic.geom
 	public class Polygon2D 
 	{
 		
-		protected var _path:Vector.<Number>;
+		protected var _numberPath:Vector.<Number>;
+		protected var _vector2DPath:Vector.<Vector2D>;
 		
-		public function Polygon2D(pPath:Vector.<Number> = null) 
+		protected var _isNumberPath:Boolean = true;
+		
+		
+		public function Polygon2D( pPath:Vector.<Number> = null ) 
 		{
-			if (pPath == null) _path = new Vector.<Number>(0, false);
-			else path = pPath;
+			if (pPath == null) _numberPath = new Vector.<Number>( 0, false );
+			else numberPath = pPath;
 		}
 		
 		/**
@@ -24,13 +28,35 @@ package namide.basic.geom
 		 * the data vector is a series of numbers where each group of two numbers represents a coordinate location.
 		 * All of this points represent a polygon.
 		 */
-		public function get path():Vector.<Number> { return _path; }
-		public function set path( pPath:Vector.<Number> ):void
+		public function get numberPath():Vector.<Number> { return _numberPath; }
+		public function set numberPath( pPath:Vector.<Number> ):void
 		{
-			_path = pPath;
-			_path.fixed = false;
-			const last:int = _path.length;
-			if ( ( _path[0] != _path[last - 2] ) || ( _path[1] != _path[last - 1] ) ) _path.push( _path[0], _path[1] );
+			_numberPath = pPath;
+			_numberPath.fixed = false;
+			const last:int = _numberPath.length;
+			if ( ( _numberPath[0] != _numberPath[last - 2] ) || ( _numberPath[1] != _numberPath[last - 1] ) ) _numberPath.push( _numberPath[0], _numberPath[1] );
+		}
+		
+		public function get pathPoints():Vector.<Vector2D> { return _vector2DPath; }
+		public function set pathPoints( pPathPoints:Vector.<Vector2D> ):void
+		{
+			_vector2DPath = pPathPoints;
+		}
+		
+		public function get isNumberPath():Boolean 			{ return _isNumberPath; }
+		public function setPathType( numberPath:Boolean ):void
+		{
+			_isNumberPath = value;
+			if ( _isNumberPath && _vector2DPath != null && _numberPath == null )
+			{
+				setByPathVector( _vector2DPath );
+				_vector2DPath = null;
+			}
+			else if ( !_isNumberPath && _vector2DPath == null && _numberPath != null )
+			{
+				_vector2DPath = getPathVector();
+				_isNumberPath = null;
+			}
 		}
 		
 		/**
@@ -40,14 +66,16 @@ package namide.basic.geom
 		 */
 		public function getPathVector():Vector.<Vector2D>
 		{
+			if ( !_isNumberPath ) return _vector2DPath;
+			
 			var i:int;
-			const l:int = _path.length >> 1;
+			const l:int = _numberPath.length >> 1;
 			var pathDVector2D:Vector.<Vector2D> = new Vector.<Vector2D>( l, true );
 			
 			i = l;
 			while(--i>-1)
 			{
-				pathDVector2D[i] = new Vector2D( _path[i+i], _path[i+i+1] );
+				pathDVector2D[i] = new Vector2D( _numberPath[i+i], _numberPath[i+i+1] );
 			}
 			
 			return pathDVector2D;
@@ -60,13 +88,19 @@ package namide.basic.geom
 		 */
 		public function setByPathVector( pathVector:Vector.<Vector2D> ):Polygon2D
 		{
+			if ( !_isNumberPath )
+			{
+				_vector2DPath = pathVector;
+				return this;
+			}
+			
 			var i:int = pathVector.length;
-			_path = new Vector.<Number>(i << 1, true);
+			_numberPath = new Vector.<Number>(i << 1, true);
 			
 			while( --i > -1 )
 			{
-				_path[ (i + i) ] = pathVector[i].x;
-				_path[ (i + i) + 1 ] = pathVector[i].y;
+				_numberPath[ (i + i) ] = pathVector[i].x;
+				_numberPath[ (i + i) + 1 ] = pathVector[i].y;
 			}
 			
 			return this;
@@ -194,20 +228,36 @@ package namide.basic.geom
 			setByPathVector( outList );
 		}
 		
-		public function invertVertixesOrientation():void
+		public function invertVerticesOrientation():void
 		{
-			const l:int = _path.length * 0.5;
-			var newPath:Vector.<Number> = new Vector.<Number>( l + l, true );
+			var l:int;
+			var i:int;
 			
-			var i:int = l;
-			var i2:int;
-			while ( --i > -1 )
+			if ( _isNumberPath )
 			{
-				i2 = i + i;
-				newPath[i2] = _path[ l - (1 + i2) ];
-				newPath[i2+1] = _path[ l - (1 + i2) ];
+				l = _numberPath.length >> 1;
+				var newNumberPath:Vector.<Number> = new Vector.<Number>( l + l, true );
+				
+				i = l;
+				var i2:int;
+				while ( --i > -1 )
+				{
+					i2 = i + i;
+					newNumberPath[i2] = _numberPath[ l - (1 + i2) ];
+					newNumberPath[i2+1] = _numberPath[ l - (1 + i2) ];
+				}
+				_numberPath = newNumberPath;
 			}
-			
+			else
+			{
+				l = _vector2DPath.length;
+				var newVectorPath:Vector.<Vector2D> = newVectorPath.slice();
+				i = l;
+				while ( --i > -1 )
+				{
+					_vector2DPath[l - (1 + i)] = newVectorPath[i];
+				}
+			}
 		}
 		
 		/**
@@ -223,14 +273,29 @@ package namide.basic.geom
 		
 		public function areaSigned():Number
 		{
-			var i:int = (_path.length * 0.5) - 2;
+			var i:int;
 			var area:Number = 0;
-			var i2:int;
-			while (--i>-1)
+			
+			if ( _isNumberPath )
 			{
-				i2 = i+i;
-				area += _path[i2] * _path[i2 + 3] - _path[i2 + 2] * _path[i2 + 1];
+				i = (_numberPath.length >> 1) - 2;
+				var i2:int;
+				while (--i>-1)
+				{
+					i2 = i+i;
+					area += _numberPath[i2] * _numberPath[i2 + 3] - _numberPath[i2 + 2] * _numberPath[i2 + 1];
+				}
+				
 			}
+			else
+			{
+				i = _vector2DPath.length;
+				while (--i>-1)
+				{
+					area += _vector2DPath[i].x * _vector2DPath[i + 1].y - _vector2DPath[i+1].x * _vector2DPath[i].y;
+				}
+			}
+			
 			area *= 0.5;
 			return area;
 		}
@@ -302,17 +367,35 @@ package namide.basic.geom
 		 * 
 		 * @return DVector2D Center of the polygon
 		 */
-		public function getCenter():Vector2D
+		public function getCenter( center:Vector2D = null ):Vector2D
 		{
-			var center:Vector2D = new Vector2D();
-			const l:int = _path.length;
-			var i:int = l;
-			while (--i > -1)
+			if ( center == null ) center = new Vector2D();
+			
+			var l:int, i:int;
+			if (_isNumberPath)
 			{
-				if ( i % 2 ) 	center.x += _path[i];
-				else 			center.y += _path[i];				
+				l = _numberPath.length - 2;
+				i = l;
+				while (--i > -1)
+				{
+					if ( i % 2 ) 	center.x += _numberPath[i];
+					else 			center.y += _numberPath[i];				
+				}
+				center.scaleSelf( 2 / l );
 			}
-			return center.scaleSelf( 2 / l );
+			else
+			{
+				l = _vector2DPath.length;
+				i = l;
+				while ( --i > -1 )
+				{
+					center.x += _vector2DPath[i].x;
+					center.y += _vector2DPath[i].y;		
+				}
+				center.scaleSelf( 1 / l );
+			}
+			
+			return center;
 		}
 		
 		/**
@@ -322,14 +405,34 @@ package namide.basic.geom
 		 */
 		public function getSegments():Vector.<Segment2D>
 		{
-			var i:int = _path.length;
-			var segments:Vector.<Segment2D> = new Vector.<Segment2D>( i * 0.5 - 1, true );
-			i -= 4;
-			while ( i > -1 )
+			var i:int;
+			var segments:Vector.<Segment2D>;
+			
+			if ( _isNumberPath )
 			{
-				segments[i * 0.5] = new Segment2D( new Vector2D( _path[i], _path[i + 1] ), new Vector2D( _path[i + 2], _path[i + 3] ) );
-				i -= 2;
+				i = _numberPath.length;
+				segments = new Vector.<Segment2D>( i * 0.5 - 1, true );
+				i -= 4;
+				while ( i > -1 )
+				{
+					segments[i * 0.5] = new Segment2D( new Vector2D( _numberPath[i], _numberPath[i + 1] ), new Vector2D( _numberPath[i + 2], _numberPath[i + 3] ) );
+					i -= 2;
+				}
 			}
+			else
+			{
+				const l:int = _vector2DPath.length;
+				i = l;
+				segments = new Vector.<Segment2D>( i, true );
+				
+				i--;
+				if ( i > -1 ) segments[i] = new Segment2D( _vector2DPath[i], _vector2DPath[0] );
+				while ( --i > -1 )
+				{
+					segments[i] = new Segment2D( _vector2DPath[i], _vector2DPath[i+1] );
+				}
+			}
+			
 			return segments;
 		}
 		
@@ -342,21 +445,11 @@ package namide.basic.geom
 		public function hitTestPolygon( poly:Polygon2D ):Boolean
 		{
 			return hitTestPolygons( this, poly );
-			/*var vect:DVector2D = poly.getCenter();
-			
-			if ( hitTestPoint( vect ) ) return true;
-			
-			var i:int = poly._path.length - 2;
-			while ( i > -1 )
-			{
-				vect.x = poly._path[i];
-				vect.y = poly._path[i+1];
-				
-				if ( hitTestPoint( vect ) ) return true;
-				
-				i -= 2;
-			}
-			return false;*/
+		}
+		
+		public function hitTestSegment( seg:Segment2D ):Boolean
+		{
+			return ( hitTestPoint(seg.a) || hitTestPoint(seg.b) );
 		}
 		
 		public static function hitTestPolygons( poly1:Polygon2D, poly2:Polygon2D ):Boolean
@@ -366,26 +459,50 @@ package namide.basic.geom
 			vect = poly2.getCenter();
 			if ( poly1.hitTestPoint( vect ) ) return true;
 			
-			var i:int = poly1._path.length - 2;
-			while ( i > -1 )
+			var i:int;
+			
+			if ( poly1._isNumberPath )
 			{
-				vect.x = poly1._path[i];
-				vect.y = poly1._path[i+1];
-				
-				if ( poly2.hitTestPoint( vect ) ) return true;
-				
-				i -= 2;
+				i = poly1._numberPath.length - 2;
+				while ( i > -1 )
+				{
+					vect.x = poly1._numberPath[i];
+					vect.y = poly1._numberPath[i+1];
+					
+					if ( poly2.hitTestPoint( vect ) ) return true;
+					
+					i -= 2;
+				}
+			}
+			else
+			{
+				i = poly1._vector2DPath;
+				while ( --i > -1 )
+				{
+					if ( poly2.hitTestPoint( poly1._vector2DPath[i] ) ) return true;
+				}
 			}
 			
-			i = poly2._path.length - 2;
-			while ( i > -1 )
+			if ( poly2._isNumberPath )
 			{
-				vect.x = poly2._path[i];
-				vect.y = poly2._path[i+1];
-				
-				if ( poly1.hitTestPoint( vect ) ) return true;
-				
-				i -= 2;
+				i = poly2._numberPath.length - 2;
+				while ( i > -1 )
+				{
+					vect.x = poly2._numberPath[i];
+					vect.y = poly2._numberPath[i+1];
+					
+					if ( poly1.hitTestPoint( vect ) ) return true;
+					
+					i -= 2;
+				}
+			}
+			else
+			{
+				i = poly2._vector2DPath;
+				while ( --i > -1 )
+				{
+					if ( poly1.hitTestPoint( poly2._vector2DPath[i] ) ) return true;
+				}
 			}
 			
 			return false;
@@ -416,10 +533,10 @@ package namide.basic.geom
 		}
 		
 		/**
-		 * Evaluates if the DVector2D pt is in the polygon.
+		 * Evaluates if the Vector2D pt is in the polygon.
 		 * 
-		 * @param	pt	DVector2D for the test
-		 * @return	true if the DVector2D is in the polygon; false if not. 
+		 * @param	pt	Vector2D for the test
+		 * @return	true if the Vector2D is in the polygon; false if not. 
 		 */
 		public function hitTestPoint(pt:Vector2D):Boolean
 		{
@@ -428,28 +545,52 @@ package namide.basic.geom
 			var crossPt:Vector2D;
 			
 			
-			var segment:Segment2D = new Segment2D( new Vector2D( _path[0], _path[1]), new Vector2D( _path[_path.length - 2], _path[_path.length - 1]) );
+			var segment:Segment2D;
+			if ( _isNumberPath ) segment = new Segment2D( new Vector2D( _numberPath[0], _numberPath[1]), new Vector2D( _numberPath[_numberPath.length - 2], _numberPath[_numberPath.length - 1]) );
+			else segment = new Segment2D( _vector2DPath[0], _vector2DPath[_vector2DPath.length - 1] );
+			
 			if ( !segment.a.equals(segment.b) )
 			{
 				crossPt = segment.crossByEquation(l);
 				if ( crossPt != null ) col += (crossPt.y < pt.y) ? 1 : 0;
 			}
 			
-			
-			var i:int = _path.length * 0.5 - 1;
-			while (--i > -1)
+			var i:int;
+			if ( _isNumberPath )
 			{
-				segment.a.x = _path[i + i];
-				segment.a.y = _path[i + i + 1];
-				segment.b.x = _path[i + i + 2];
-				segment.b.y = _path[i + i + 3];
-				crossPt = segment.crossByEquation(l);
-				
-				if ( crossPt != null ) 
+				i = _numberPath.length * 0.5 - 1;
+				while (--i > -1)
 				{
-					if ( crossPt.y >= pt.y && !crossPt.equals(segment.a) )
+					segment.a.x = _numberPath[i + i];
+					segment.a.y = _numberPath[i + i + 1];
+					segment.b.x = _numberPath[i + i + 2];
+					segment.b.y = _numberPath[i + i + 3];
+					crossPt = segment.crossByEquation(l);
+					
+					if ( crossPt != null ) 
 					{
-						col += 1;
+						if ( crossPt.y >= pt.y && !crossPt.equals(segment.a) )
+						{
+							col += 1;
+						}
+					}
+				}
+			}
+			else
+			{
+				i = _vector2DPath.length - 1;
+				while (--i > -1)
+				{
+					segment.a = _vector2DPath[i];
+					segment.b = _vector2DPath[i + 1];
+					crossPt = segment.crossByEquation(l);
+					
+					if ( crossPt != null ) 
+					{
+						if ( crossPt.y >= pt.y && !crossPt.equals(segment.a) )
+						{
+							col += 1;
+						}
 					}
 				}
 			}
@@ -467,22 +608,22 @@ package namide.basic.geom
 		 * @param	path	Vector of Numbers where each pair of numbers is treated as a coordinate location (an x, y pair)	
 		 * @return	New path of a convex polygon
 		 */
-		public static function pathToPathConvexForm(path:Vector.<Number>):Vector.<Number>
+		public static function numberPathToNumberPathConvexForm( path:Vector.<Number> ):Vector.<Number>
 		{
 			var p:Polygon2D = new Polygon2D( path );
 			p.convertToConvexForm();
-			return p.path;
+			return p.numberPath;
 		}
 		
 		public function toString():String
 		{
 			var s:String = "(";
-			const l:int = path.length;
+			const l:int = numberPath.length;
 			var i:int = 0;
 			
 			for ( i = 0; i < l; i+=2 )
 			{
-				s += " (x=" + path[i] + ", y=" + path[i+1] + ")";
+				s += " (x=" + numberPath[i] + ", y=" + numberPath[i+1] + ")";
 			}
 			s += " )";
 			return s;

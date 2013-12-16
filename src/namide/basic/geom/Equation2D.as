@@ -143,7 +143,7 @@ package namide.basic.geom
 		 * 
 		 * @see com.namide.dLib.geom.DVector2D
 		 */
-		public function initByOrthogonalEquationAndPoint( l:Equation2D, pt:Vector2D ):Equation2D
+		public function initByOrthogonalEquationAndPoint( l:Equation2D, pt:Vector2DConst ):Equation2D
 		{
 			
 			_a = NaN;
@@ -178,7 +178,7 @@ package namide.basic.geom
 		 * @param	pt		DVector2D of the final equation
 		 * @return
 		 */
-		public static function equationByOrthogonalEquationAndPoint( l:Equation2D, pt:Vector2D ):Equation2D
+		public static function equationByOrthogonalEquationAndPoint( l:Equation2D, pt:Vector2DConst ):Equation2D
 		{
 			return new Equation2D().initByOrthogonalEquationAndPoint( l, pt );
 		}
@@ -224,16 +224,15 @@ package namide.basic.geom
 			}
 			else
 			{
-
 				if (!isNaN(c0))
 				{
-					if (!isNaN(c0))
+					if (!isNaN(c1))
 					{
 						return null;
 					}
 					else
 					{
-						return new Vector2D( c0, (a1*c0 + b1) );
+						return new Vector2D( c0, (a1 * c0 + b1) );
 					}
 					
 				}

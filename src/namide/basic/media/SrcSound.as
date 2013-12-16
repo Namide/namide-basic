@@ -195,14 +195,18 @@ package namide.basic.media
 
 		public function get volume():Number 
 		{
-			if ( _soundTransform ) _volume = _soundTransform.volume;
+			if ( _soundChannel && _soundChannel.soundTransform ) _volume = _soundChannel.soundTransform.volume;
 			return _volume;
 		}
 		public function set volume(value:Number):void { setVolume( value ); }
 		public function setVolume(val:Number):ISound 
 		{
 			_volume = val;
-			if ( _soundChannel && _soundChannel.soundTransform ) _soundChannel.soundTransform.volume = _volume;
+			if ( _soundChannel && _soundChannel.soundTransform )
+			{
+				_soundTransform = new SoundTransform(_volume);
+				_soundChannel.soundTransform = _soundTransform;
+			}
 			return this;
 		}
 
